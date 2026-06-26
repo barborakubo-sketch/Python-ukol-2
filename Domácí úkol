@@ -1,0 +1,63 @@
+import requests
+import json
+
+
+# ČÁST 1
+print("Vyhledání subjektu podle IČO")
+
+ico = input("Zadej IČO subjektu: ")
+
+url = f"https://ares.gov.cz/ekonomicke-subjekty-v-be/rest/ekonomicke-subjekty/{ico}"
+
+response = requests.get(url)
+
+if response.status_code == 200:
+    data = response.json()
+
+    obchodni_jmeno = data.get("obchodniJmeno")
+    adresa = data.get("sidlo", {}).get("textovaAdresa")
+
+    print("\nVýsledek:")
+    print(obchodni_jmeno)
+    print(adresa)
+
+else:
+    print("Subjekt nebyl nalezen nebo došlo k chybě.")
+
+
+# ČÁST 2
+print("\nVyhledání subjektů podle názvu")
+
+nazev = input("Zadej název nebo část názvu subjektu: ")
+
+headers = {
+    "accept": "application/json",
+    "Content-Type": "application/json",
+}
+
+data = json.dumps({
+    "obchodniJmeno": nazev
+})
+
+response = requests.post(
+    "https://ares.gov.cz/ekonomicke-subjekty-v-be/rest/ekonomicke-subjekty/vyhledat",
+    headers=headers,
+    data=data
+)
+
+if response.status_code == 200:
+    vysledek = response.json()
+
+    pocet = vysledek.get("pocetCelkem", 0)
+    subjekty = vysledek.get("ekonomickeSubjekty", [])
+
+    print(f"\nNalezeno subjektů: {pocet}")
+
+    for subjekt in subjekty:
+        jmeno = subjekt.get("obchodniJmeno")
+        ico = subjekt.get("ico")
+
+        print(f"{jmeno}, {ico}")
+
+else:
+    print("Při vyhledávání došlo k chybě.")
